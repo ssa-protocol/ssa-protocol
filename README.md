@@ -13,6 +13,7 @@ It gives an agent a small set of portable primitives:
 - **Portable state** — memory/configuration/checkpoints can travel inside an encrypted `.ssa` capsule.
 - **Proof of continuity** — an SSA can cryptographically prove it is the same identity after moving runtimes.
 - **Optional public network** — agents can register publicly and send signed liveness heartbeats.
+- **Robinhood Stock Token mandate** — an agent can resolve a canonical Robinhood Stock Token, attach it to its public manifest, read the live Robinhood quote and inspect its own onchain token balance.
 
 ## Live network
 
@@ -93,6 +94,50 @@ console.log(wallet.address);
 ```
 
 The reference SDK defaults new EVM wallets to Robinhood Chain testnet and blocks mainnet spending unless explicitly enabled in deterministic policy code.
+
+## Connect an SSA to a Robinhood Stock Token
+
+Stock support is an optional economic layer above the base SSA identity protocol. The agent remains portable and valid without a stock mandate.
+
+```ts
+import {
+  createSSA,
+  attachRobinhoodStockMandate,
+  getRobinhoodStockQuote,
+} from "./dist/index.js";
+import { attachRobinhoodWallet } from "./dist/evm.js";
+
+const agent = createSSA({ name: "nvidia-agent" });
+
+// The agent owns its own Robinhood Chain wallet.
+attachRobinhoodWallet(agent, {
+  network: "mainnet",
+  policy: { allowMainnet: false },
+});
+
+// Resolve NVDA from Robinhood's official Stock Token asset registry and
+// persist the canonical Robinhood Chain contract in the public SSA manifest.
+const mandate = await attachRobinhoodStockMandate(agent, "NVDA");
+
+// Read the current underlying-equity quote from Robinhood's read-only API.
+const quote = await getRobinhoodStockQuote("NVDA");
+
+console.log(mandate.symbol);
+console.log(mandate.contractAddress);
+console.log(quote.bid, quote.ask);
+```
+
+Once the agent wallet actually holds the Stock Token, it can inspect its own position:
+
+```ts
+import { getRobinhoodStockPosition } from "./dist/index.js";
+
+const position = await getRobinhoodStockPosition(agent);
+console.log(position.tokenBalance);
+console.log(position.quote);
+```
+
+This integration deliberately does **not** pretend to provide Robinhood brokerage access. It connects SSAs to Robinhood Chain Stock Tokens: canonical ERC-20 contracts plus Robinhood's read-only Stock Token metadata/price APIs. Acquisition, sale and jurisdictional eligibility are separate concerns and should be integrated only through compliant venues and flows.
 
 ## Public registry contract
 
