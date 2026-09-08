@@ -2,6 +2,7 @@ export { SovereignAgent, type CreateSSAOptions } from "./agent.js";
 export { SovereignAgent as SSA } from "./agent.js";
 export * from "./schema.js";
 export * from "./policy.js";
+export * from "./robinhood-stocks.js";
 
 import { SovereignAgent, type CreateSSAOptions } from "./agent.js";
 
